@@ -1,36 +1,52 @@
-class Vehicle(ABC):
-    @abstractmethod
-    def getType(self) -> str:
-        pass
+interface Vehicle {
+    String getType();
+}
 
-class Car(Vehicle):
-    def getType(self) -> str:
-        return "Car"
+class Car implements Vehicle {
+    @Override
+    public String getType() {
+        return "Car";
+    }
+}
 
-class Bike(Vehicle):
-    def getType(self) -> str:
-        return "Bike"
+class Bike implements Vehicle {
+    @Override
+    public String getType() {
+        return "Bike";
+    }
+}
 
-class Truck(Vehicle):
-    def getType(self) -> str:
-        return "Truck"
+class Truck implements Vehicle {
+    @Override
+    public String getType() {
+        return "Truck";
+    }
+}
 
-class VehicleFactory(ABC):
-    @abstractmethod
-    def createVehicle(self) -> Vehicle:
-        pass
+abstract class VehicleFactory {
+    abstract Vehicle createVehicle();
+}
 
-class CarFactory(VehicleFactory):
-    def createVehicle(self) -> Vehicle:
-        return Car()
+class CarFactory extends VehicleFactory {
+    @Override
+    Vehicle createVehicle() {
+        return new Car();
+    }
+}
 
-class BikeFactory(VehicleFactory):
-    def createVehicle(self) -> Vehicle:
-        return Bike()
+class BikeFactory extends VehicleFactory {
+    @Override
+    Vehicle createVehicle() {
+        return new Bike();
+    }
+}
 
-class TruckFactory(VehicleFactory):
-    def createVehicle(self) -> Vehicle:
-        return Truck()
+class TruckFactory extends VehicleFactory {
+    @Override
+    Vehicle createVehicle() {
+        return new Truck();
+    }
+}
 
 
 // Examples
