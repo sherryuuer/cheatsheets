@@ -48,18 +48,20 @@ class TruckFactory extends VehicleFactory {
     }
 }
 
+public class Main {
+    public static void main(String[] args) {
+        // Examples
+        VehicleFactory carFactory = new CarFactory();
+        VehicleFactory truckFactory = new TruckFactory();
+        VehicleFactory bikeFactory = new BikeFactory();
 
-// Examples
-VehicleFactory carFactory = new CarFactory();
-VehicleFactory truckFactory = new TruckFactory();
-VehicleFactory bikeFactory = new BikeFactory();
+        Vehicle myCar = carFactory.createVehicle();
+        Vehicle myTruck = truckFactory.createVehicle();
+        Vehicle myBike = bikeFactory.createVehicle();
 
-Vehicle myCar = carFactory.createVehicle();
-Vehicle myTruck = truckFactory.createVehicle();
-Vehicle myBike = bikeFactory.createVehicle();
-
-myCar.getType();   // "Car"
-myTruck.getType(); // "Truck"
-myBike.getType();  // "Bike"
-
-
+        // Print the vehicle types
+        System.out.println(myCar.getType()); // "Car"
+        System.out.println(myTruck.getType()); // "Truck"
+        System.out.println(myBike.getType()); // "Bike"
+    }
+}
