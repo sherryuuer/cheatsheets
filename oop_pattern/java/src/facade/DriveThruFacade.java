@@ -1,3 +1,20 @@
+package facade;
+
+class DriveThruFacade {
+    private Cashier cashier = new Cashier();
+    private Chef chef = new Chef();
+    private KitchenStaff kitchenStaff = new KitchenStaff();
+
+    public Food takeOrder(String orderContents, boolean takeOut) {
+        Order order = cashier.takeOrder(orderContents, takeOut);
+        Food food = chef.prepareFood(order);
+        if (order.isTakeOut()) {
+            return kitchenStaff.packageOrder(food);
+        }
+        return food;
+    }
+}
+
 class Order {
     private String contents;
     private boolean takeOut;
@@ -23,15 +40,15 @@ class Cashier {
 }
 
 class Food {
-  private String contents;
+    private String contents;
 
-  public Food(String order) {
-    this.contents = order;
-  }
+    public Food(String order) {
+        this.contents = order;
+    }
 
-  public String getFood() {
-    return contents;
-  }
+    public String getFood() {
+        return contents;
+    }
 }
 
 class Chef {
@@ -49,20 +66,5 @@ class PackagedFood extends Food {
 class KitchenStaff {
     public PackagedFood packageOrder(Food food) {
         return new PackagedFood(food);
-    }
-}
-
-class DriveThruFacade {
-    private Cashier cashier = new Cashier();
-    private Chef chef = new Chef();
-    private KitchenStaff kitchenStaff = new KitchenStaff();
-
-    public Food takeOrder(String orderContents, boolean takeOut) {
-        Order order = cashier.takeOrder(orderContents, takeOut);
-        Food food = chef.prepareFood(order);
-        if (order.isTakeOut()) {
-            return kitchenStaff.packageOrder(food);
-        }
-        return food;
     }
 }

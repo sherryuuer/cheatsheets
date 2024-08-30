@@ -1,39 +1,10 @@
 import threading
 
 
-class Singleton:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Singleton, cls).__new__(cls)
-            cls._instance.value = None
-        return cls._instance
-
-    def getValue(self):
-        return self.value
-
-    def setValue(self, value):
-        self.value = value
-
-
-# 使用示例
-s = Singleton()
-
-print(s.getValue())  # None
-
-s.setValue("a value string")
-print(s.getValue())  # "a value string"
-
-s2 = Singleton()
-
-print(s2.getValue())  # "a value string"
-
-
-# Another example
 class PrinterService:
     # 定义了一个线程锁,用于控制对实例的并发访问。
     _instance_lock = threading.Lock()
+    # 唯一的对象
     _unique_instance = None
 
     def __new__(cls):
