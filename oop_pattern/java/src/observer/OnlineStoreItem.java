@@ -1,24 +1,7 @@
-interface Observer {
-    void notify(String itemName);
-}
+package observer;
 
-class Customer implements Observer {
-    private String name;
-    private int notifications;
-
-    public Customer(String name) {
-        this.name = name;
-        this.notifications = 0;
-    }
-
-    public void notify(String itemName) {
-        this.notifications += 1;
-    }
-
-    public int countNotifications() {
-        return this.notifications;
-    }
-}
+import java.util.List;
+import java.util.ArrayList;
 
 class OnlineStoreItem {
     private String itemName;

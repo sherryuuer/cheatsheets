@@ -23,7 +23,7 @@ class OnlineStoreItem:
     def __init__(self, itemName: str, stock: int) -> None:
         self.itemName = itemName
         self.stock = stock
-        self.observers: List[Observer] = []
+        self.observers = []
 
     def subscribe(self, observer: Observer) -> None:
         self.observers.append(observer)
