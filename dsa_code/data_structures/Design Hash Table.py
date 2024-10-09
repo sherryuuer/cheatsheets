@@ -24,7 +24,7 @@ class HashTable:
             self.size += 1
         else:
             # If table entry has nodes, check for key update or append to the end
-            prev = None
+            prev = None  # 这里的 prev 是为了 hold 最后一个节点，不然让追溯到 node 为null后，无法找到他的前一个节点，除非这是一个双链表
             while node:
                 if node.key == key:
                     node.value = value
