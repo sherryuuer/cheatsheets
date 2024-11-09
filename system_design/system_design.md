@@ -22,7 +22,7 @@
 - use case：使用场景再现
 - user flows：使用可视化的流程再现这些场景
 - 将二者融合，抽取所有 actors，data，events
-- Flow 由 events 组成，events 包括 actions，data，UML时序图是一个很好用的工具
+- **Flow 由 events 组成，events 包括 actions，data**，UML时序图是一个很好用的工具
 
 ## Quality Attributes
 
@@ -124,6 +124,9 @@
   - Defining Resource representation: use Json is great
   - Assigning HTTP methods to Operations on Resources
 
+### WebSocket
+real-time protocol
+
 ## LS-System building blocks
 (large scale system)
 
@@ -148,7 +151,7 @@
 - *hardware/software LB*：专用的硬件设备或者软件程序
 - 较为安全
 - 有监控功能
-- 提供多种请求分配策略
+- 提供多种*请求分配策略*
 - **可以在后端作为internal的LB组件，每一个service都可以是一个服务器集群，那么这意味着每个集群都可以有一个LB，比如k8s就是用内部的service组件进行LB**
 
 - **GSLB**：global server load balancer
@@ -160,11 +163,11 @@
 ### Message Brokers
 
 - 异步通信和疏结合的重要组件 Async
-- 适用于：后端处理需要很长时间的情况 / 前端收到大量requests的情况
+- 适用于：后端处理需要很长时间的情况 / 前端收到大量 requests 的情况
 - 用于系统内部而不会暴露在外
-- 使用Queue数据结构
+- 使用 Queue 数据结构
 - 主要功能：buffer message, message routing, transformation validation, load balancing
-- 一个用例：前端收到订单，对数据库进行库存-1处理，并将订单发送到queue等待接受处理
+- 一个用例：前端收到订单，对数据库进行库存-1处理，并将订单发送到 queue 等待接受处理
 - 大多 Brokers 拥有*Pub/Sub*构架功能，很容易进行 service 服务订阅的添加，提高系统的*可用性和扩展性*
 
 - *fault tolerance*
@@ -181,3 +184,286 @@
 - GCP Pub/Sub
 
 ### API Gateway
+
+- 需要解决的问题，是后端的各种API服务之间，难以统一管理的问题 -> API composition，让用户接口API结合为一个 single one
+- Benefits：
+  - 提升用户 routing 效率，从多个 requests 合并后只需要 call 一个 request
+  - cache 静态内容和 response，从而提升 performance
+  - 后端API易于 refactoring 和 modification
+  - 便于集中管理 authentication，authorization，security，rate-limiting
+  - monitoring，alarting
+  - protocol translation 比如外部用 HTTP/s协议接收 request，内部使用 gRPC 协议进行服务间通信
+
+- 注意事项：
+  - 不要有任何 business logic
+  - 消除 SPOF，前置 LB，进行冗余和负载均衡设置，同时用 DevOps 确保消除 human error，防止全系统失败
+  - 不要让外部不必要的请求 bypass 你的API Gateway，直接 request 内部服务，只通过 API Gateway 请求，这便于维护我们的内部API接口，而不是维护多个外部接口
+
+### CDN
+
+- 需要解决的问题（wide world wait 问题）：地理距离，TCP握手，大文件传输（iamges，videos流，HTTP/JS/CSS文件），造成的高延迟
+- 物理近便性，cache
+- 提高后端服务可用性，降低传输延迟（performance）
+- DDoS 防护层
+
+- *Products*
+- Cloudflare
+- Google Cloud Platform CDN
+- AWS CloudFront
+
+- *特征*
+- 使用优化的hardware
+- 文件压缩技术，降低 bandwidth 压力
+- pull 方式更新文件，设置 TTL，过期文件定期更新，不存在的文件，根据用户的 request 重新 pull
+  - pro：CDN 管理一切，服务器压力小
+  - con：第一个用户有延迟，TTL 设置不好会导致流量延迟或者内容过期，同样需要维护源服务器，如果被 pull 的时候出问题，用户会发生 error
+- push 方式更新，很多 case 直接设置一个很长的 TTL，然后每次更新源文件都进行 push
+  - pro：源服务器控制推送时机，提高内容可用性，*适合内容不经常更改的场景*，只需要更新推送即可，降低流量
+  - con：需要增加源服务器逻辑，维护推送逻辑，不适合高频更新的场景
+
+## Data Storage at GS
+（GS=Global Scale）
+### RDB & ACID
+
+- *pro*：
+- SQL 标准操作语言
+- 数据进行正规化处理，提高存储效率
+- ACID 性质保证了事务处理的高效和正确
+
+- *con*：
+- 预先设计的 schema 结构是死板的（rigid），后期不容易更改
+- scale 和 maintain 难度高
+- read 很慢，行存储特性
+
+- 适用于：不需要大量 read 操作，需要复杂查询，或事务处理的场景
+
+### NoSQL DB
+
+- 数据不需要统一的 schema，以 attributes 的形式随意增减，因此不容易像SQL数据库那样进行分析，也不容易支持 ACID 事务处理了
+- 不一定以 table 的形式存在，而是更接近编程语言的存在方式，list，map，json
+- RDB用于高效存储，NoSQL适用于高速检索，由于数据结构也很多，所以有很多不同的 NoSQL 适用于不同的 usecase
+
+- *types*
+- Key-value store
+- Document store：collections of objects（class -> attributes with data types）, example: json, xml, yaml
+- Graph store: extension of document store, with *Link, traverse, analyze* efficently
+  - 比如，欺诈检测，同一个人用不同账号进行事务处理，推介系统，社交网络
+
+- *use case*
+- 高速查询，比如 caching，放在 RDB 前面的 key-value store
+- 大数据，实时 real-time 查询
+- schema 不统一，比如你的推特，用户 profiles，
+
+- Key-value Stores: Redis, Amazon DynamoDB
+- Document Store: Cassandra, MongoDB
+- Graph Databases: Amazon Neptune, NEO4J
+
+### Techniques of improving SAP of DB
+(SAP: scalability, availability, performance)
+
+1. indexing
+- 索引数据，优化查询（而不是 scan 全表），使用 hashmap 算法，或 B-tree，自平衡树，以 log 速度进行查询
+- index 意味着将经常查询的 column 和行号 mapping，从而快速找到想要的数据，index 可以是一个 column，或多个 columns 的组合
+- 但是，会增加 index 的存储量，同时 write 速度会变慢（更新表的同时要更新索引）
+
+2. replication
+- Fault Tolerance：一个烧了，也有备份
+- Throughput：提高查询带宽，大家一起查
+- 但是，提高了write，update，delete的操作难度
+
+3. partitioning/sharding
+- pro
+  - 存储更多数据，在更多 db servers 上，提高并行查询的效率
+  - 路由到正确的 shard 上，需要更大的开销 overhead
+- 在 NoSQL 数据库上进行分区更自然，因为记录之间是解耦的，更容易实现
+- SQL数据库中则一般需要多行查询结果，在大数据查询中，保证正确分区非常重要
+
+### CAP
+- 在一个*分布式系统*中，存在*网络通信和延迟*的情况下，只能选择*一致性*和*可用性*之一
+- 但是能保证 CA 的只有一个中心化的大数据库，但它将成为 SPOF，这是不现实的，所以只能是 AP 或者 CP，A和C之间就像是一个刻度尺，是此消彼长的关系
+
+### Unstructured Data Storage
+
+- SQL 或者 NoSQL 都是结构化数据，非结构化数据是 images，videos，pdf，blob 等无法简单存储在数据库中的数据类型
+- use cases：
+  - 用户上传存储，压缩，编码，分享，备份这些数据
+  - SQL，NoSQL 数据库的备份 snapshots 文件，适合灾难恢复，backup，audit，archive
+  - 系统的镜像 images 备份文件
+  - web hosting 时候的图片，缩略图，大型静态文件等
+  - 用于大数据，IoT和机器学习的数据存储
+
+- *DFS*：distributed file system
+- 以传统的文件系统的方式存储数据
+- 无需 API
+- 可以直接修改，添加文件内容
+- 在分布式系统上的操作高效快速
+- 但有时文件数量有限制，无法通过 web api（HTTP/REST）进行访问
+
+- *Object Storage*
+- 存储数量无限制
+- 单个文件 limit 很高（5～10TB）
+- 提供 HTTP/S REST API 接口
+- default 版本控制 versioning 功能
+- 没有文件夹结构，为扁平结构，用 URI 标识
+- 每个 object 有自己的 metadata 数据
+- ACL 系统，控制用户对象访问
+- 基本云提供商，都有 tier 存储等级，节省 cost
+- 如果基于某些限制不能使用云提供商的服务，可以用开源的第三方 Object storage 存储
+- 云服务的后台有 replication 机制，耐灾害性
+- 无法直接修改文件，每个文件都是一个新版本
+- 相比较DFS，I/O性能较低
+
+## Architecture Patterns
+- 所有的架构模式都是一种 guidelines 而不是一个枷锁，提供 best practice 来参考，但不是固守
+- 随着系统的进化，一种模式可能会不适合我们的系统，migration 是有可能发生的
+
+### Multi Tier Architecture
+
+- 指不同的 application 在不同的物理基础设施上运行，和 multi layer（单个app的多个层）不是一个种概念
+- 由于 Apps 存在于不同的servers，所以他们之间都可以用 Client-Server 模型进行通信
+- 松耦合，便于更新和置换各自的内部结构
+
+- *Three-tier architecture*
+1. 前端（presentation tier），web page，mobile app，desktop app，不包括任何 business logic，用于用户交互，和取得 input 信息
+2. 后端（business tier/logic tier/app tier），从前端取得数据，进行处理
+3. 数据库（data tier），存储和持久化数据，包括文件和数据库
+- pro
+- 很多 use case，比如电子商务网站，news网页，甚至视频网站
+- 易于扩展，大量数据处理效果也不差
+- *适用于小规模的应用构架，代码逻辑不复杂，小团队维护，比如初创*
+- con
+- logic 层是一个单体 monolithic 构架层，所以每一个扩展的后端 app 服务都需高 CPU 和 memory，比如Java的垃圾回收机制需要更长的时间
+- 代码逻辑会越变越大，不利于开发，理解，和维护，增加更多的开发人员反而更高的开销和代码冲突
+- 虽然可以将代码模块化，但他们之间仍然是紧耦合的！
+
+- *two-tier architecture* 是将前端和后端逻辑合一，比如 mobile app 或 desktop app 中安装所有逻辑
+- *four-tier architecture* 是在前端和后端中间加入 API Gateway，以应对多种前端应用形式的需求，比如协议解析，安全检查，cache等功能
+
+### Microservices Architecture
+
+- small code base，易于管理，部署更快，服务分离，松耦合
+- 组织扩展性，每个团队可以用不同的框架，语言，计划，进行开发部署
+- 需要更少的cpu 和 memory，提供更高的性能，水平扩展也更快更方便
+- 更安全，因为 fault 是分离的
+
+- con：更多的 *overhead 和 challenges*
+- 需要服务之间的完全逻辑分离，不需要和其他 team 开会
+- *单一责任原则 single responsibility principle*，一个服务负责一个领域，行为，资源
+- 为每个服务*分离 database*，产生的数据重复应当在一个可以接受的 overhead 的限度内
+- 当然该模式的好处也是有上限的，如果组织过于复杂和庞大，好处就会逐渐降低
+- 从单体构架，过渡到微服务构架，是一个不错的实践方式
+
+### Event Driven Architecture
+
+- 无需 request 的 commands 和 data，只需 events
+- 分为 fact events 和 change events
+- Events producer -> message broker -> consumers
+- 好处在于，*消除了服务之间的依存关系*，异步，解耦
+- consumers 的添加不需要 producer 知道
+- 适合 real-time 分析
+- *Event source pattern* 事件源模式，告诉我们交易发生的历史过程，log分析，事件是不可变的单元，只能被添加，重放
+- *CQRS（Command Query Responsibility Segregation，命令查询职责分离）*读写分离模式，事件源的数据只用于操作，事件处理服务的数据只用于读，所有变化都以事件的形式存在，比如join事件，在一个数据库发生了更改的时候，触发更新read-only数据库的*物化视图*，这个模式*好天才*！
+- *物化视图 Materialized view*是事件驱动型
+
+## Big Data Architecture
+
+- 大量，多类型
+- Data fusion：找到隐藏模式 hidden patterns 和洞察 insights
+- 用于 prediction
+- 高速产生 stream data 比如 IoT
+
+- *批处理策略*
+- 按照时间序列处理最新的数据批
+- 比如用户评论分析，网页爬虫，网页推介系统
+- 大数据分析，数据融合，洞见
+- 对 latency 不敏感
+- *流处理策略*
+- 使用 message broker 处理
+- 实时log分析，网络交易实时查询，不适合分析和洞见
+
+### Lambda Architecture
+
+- 同时满足批处理和流处理的构架
+- 三层构架：batch layer, speed layer, serving layer
+- 数据同时进入 batch 和 speed layer
+- batch layer 进行批处理
+- speed layer 进行流处理
+- serving layer 同时拥有上面两个 layer 处理过后的 historic 数据和 recent 数据
+- *Google Analysis*就是这种感觉，既有流数据又有历史数据
+
+
+## Case study
+### Discussion Forum（Reddit，stackoverflow）
+
+* client -> app(write to user db and comments db) -> document db
+* client -> app(calculate the votes) -> key-value db
+* -> batch processing data -> generate most popular posts -> cache to CDN feed to users
+
+- REST API
+1. entities: user, posts, images, comments, votes(must be idempotent)
+2. mappting them
+   - users
+   - posts(->images/votes) -> comments(->images/votes)
+3. resources data format
+   - users(json): id, other info
+   - posts(json): userid, upvote, downvote, comments_list (image, title...)
+4. assign operation to resources
+   - users: post
+   - posts: get, post, delete
+
+- scalability:
+  - LB -> web server, LB -> backend services
+  - API gateway -> all servers's LB
+  - db shards: hash(post id + comments id 防止热点) index + range sharding
+- performance
+  - image/html on CDN
+  - API gateway cache
+  - db indexing
+  - voting service -> message broker -> posts/comments
+- fault tolarence
+  - db replication
+  - all parts are replicated
+  - GSLB 全球覆盖流量路由
+- 数据库特性是 AP
+
+### E-commerce
+
+- Merchants:
+  - upload products(image/text/video)
+  - sell products: stock -1
+- Users:
+  - browse products
+  - search
+  - buy
+
+- REST API/HTTP/S
+- entities:
+  - merchants
+  - users
+  - products: count
+
+- mapping:
+  - users(SQL): id, product_id
+  - product(NoSQL): id, price, stock, merchants_id
+  - merchants: id
+
+- diagram:
+- Merchants client -> (post image/text)web server -> product db -> ranking servers -> product
+- user client -> (browse)web server
+- user client -> (search)web server -> search engine -> cache db -> product db
+- user client -> (buy)web server -> message queue/stock-1 -> pay(3rd-party api) -> end -> email
+- images -> object storage
+
+- Non-functional
+  - scalability
+    - LB -> servers
+    - API gateway
+    - db sharding
+  - availability/fault tolerance
+    - replication
+    - GSLB
+  - performance
+    - image/html CDN
+    - cache -> db
+    - db indexing
+  - CAP: AP
