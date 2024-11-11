@@ -1,3 +1,4 @@
+# 最坏的情况，完全倒置，是n方复杂度，最好的情况只有线性时间
 def insertionSort(arr):
     for i in range(1, len(arr)):
         j = i - 1
@@ -14,7 +15,7 @@ def insertionSort(arr):
 #         self.value = value
 class Solution:
     # Implementation of Insertion Sort
-    def insertionSort(self, pairs: List[Pair]) -> List[List[Pair]]:
+    def insertionSort(self, pairs):
         n = len(pairs)
         res = []  # To store the intermediate states of the array
 

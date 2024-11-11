@@ -4,9 +4,8 @@ class ListNode:
         self.val = val
         self.next = next_node
 
+
 # Implementation for Singly Linked List
-
-
 class LinkedList:
     def __init__(self):
         # Init the list with a 'dummy' node which makes
@@ -53,7 +52,7 @@ class LinkedList:
             return True
         return False
 
-    def getValues(self) -> List[int]:
+    def getValues(self):
         curr = self.head.next
         res = []
         while curr:
