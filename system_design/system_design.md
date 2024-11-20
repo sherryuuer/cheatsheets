@@ -24,6 +24,8 @@
 - 将二者融合，抽取所有 actors，data，events
 - **Flow 由 events 组成，events 包括 actions，data**，UML时序图是一个很好用的工具
 
+- cost 计算：DAU决定requests量和 bandwidth 瓶颈，数据存储每日TB量
+
 ## Quality Attributes
 
 ### **Performance**
@@ -68,11 +70,30 @@
   - redundancy 包括物理上的，也包括时间上的，时间上包括处理重试等策略，记得确保幂等性
   - replication 策略包括：active-active，active-passive
 - *Recovery*
+  - 使用不同物理区域分配服务器，用于灾害恢复
   - 停止发送 traffic 和 workload 到有问题的 host
   - 重启服务，或者启动一个新实例
   - rollback 回滚之前的版本，predefined handbook
 
+
 ### **Security**
+
+- 数据安全和数据加密带来的性能问题的权衡
+- 几个维度：顺序是不断接近最重要的数据的
+  - 身份认证和访问安全
+  - web安全：SQL注入，跨站网络攻击
+  - 网络安全：端口，病毒，流量，DDoS
+  - 基础设施安全：数据中心，物理安全等
+  - 数据传输安全（数字证书），数据存储安全（硬件和软件加密），用户敏感信息保护
+
+### **Cost&Operation**
+
+- 成本和运维优化可以体现在各个方面
+- cost：
+  - 数据存储分 hot，warm，cold 等 tier
+- operation：
+  - DevOps 指导
+
 ### **SLA/SLOs/SLIs**
 
 ## API Design
@@ -242,6 +263,7 @@ real-time protocol
 - 数据不需要统一的 schema，以 attributes 的形式随意增减，因此不容易像SQL数据库那样进行分析，也不容易支持 ACID 事务处理了
 - 不一定以 table 的形式存在，而是更接近编程语言的存在方式，list，map，json
 - RDB用于高效存储，NoSQL适用于高速检索，由于数据结构也很多，所以有很多不同的 NoSQL 适用于不同的 usecase
+- 用户的 session 数据使用NoSQL存储，就可以进行自由的应用层扩展
 
 - *types*
 - Key-value store
@@ -341,17 +363,29 @@ real-time protocol
 
 ### Microservices Architecture
 
-- small code base，易于管理，部署更快，服务分离，松耦合
+- small code base，易于管理，部署更快，服务分离
 - 组织扩展性，每个团队可以用不同的框架，语言，计划，进行开发部署
 - 需要更少的cpu 和 memory，提供更高的性能，水平扩展也更快更方便
 - 更安全，因为 fault 是分离的
-
-- con：更多的 *overhead 和 challenges*
+- AWS 一开始的出现，就是因为社内的服务 API 的启发
+- 服务之间依赖于通信，因为是松耦合，分布式的
+- con：更多的 *overhead 和 challenges*，test 和 debug 比较难
 - 需要服务之间的完全逻辑分离，不需要和其他 team 开会
 - *单一责任原则 single responsibility principle*，一个服务负责一个领域，行为，资源
 - 为每个服务*分离 database*，产生的数据重复应当在一个可以接受的 overhead 的限度内
 - 当然该模式的好处也是有上限的，如果组织过于复杂和庞大，好处就会逐渐降低
 - 从单体构架，过渡到微服务构架，是一个不错的实践方式
+
+
+**构架原则：**
+
+1. Cohesion（功能聚合，定义边界）：将相同功能的 function 放在一起，定义微服务的边界
+2. Single Responsibility Principal（单一职责原则）：每个服务明确管理一个功能，和一个好用的API接口，size 并不重要
+3. Loose Coupling（疏结合）：防止服务之间的过渡依赖
+
+
+
+
 
 ### Event Driven Architecture
 
