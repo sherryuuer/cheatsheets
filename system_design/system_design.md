@@ -349,11 +349,11 @@ real-time protocol
 1. 前端（presentation tier），web page，mobile app，desktop app，不包括任何 business logic，用于用户交互，和取得 input 信息
 2. 后端（business tier/logic tier/app tier），从前端取得数据，进行处理
 3. 数据库（data tier），存储和持久化数据，包括文件和数据库
-- pro
+- pro：
 - 很多 use case，比如电子商务网站，news网页，甚至视频网站
 - 易于扩展，大量数据处理效果也不差
 - *适用于小规模的应用构架，代码逻辑不复杂，小团队维护，比如初创*
-- con
+- con：
 - logic 层是一个单体 monolithic 构架层，所以每一个扩展的后端 app 服务都需高 CPU 和 memory，比如Java的垃圾回收机制需要更长的时间
 - 代码逻辑会越变越大，不利于开发，理解，和维护，增加更多的开发人员反而更高的开销和代码冲突
 - 虽然可以将代码模块化，但他们之间仍然是紧耦合的！
@@ -364,28 +364,50 @@ real-time protocol
 ### Microservices Architecture
 
 - small code base，易于管理，部署更快，服务分离
-- 组织扩展性，每个团队可以用不同的框架，语言，计划，进行开发部署
+- **组织**，每个团队可以用不同的框架，语言，数据库，计划，进行开发部署
+  - 每个团队都有独立的CI/CD管道和监控系统，这是复杂的工程
+  - 每个团队都需要时间适应和学习新的系统
+  - 需要统一API设计规则，方便合作
+  - 需要有统一的安全和数据合规
 - 需要更少的cpu 和 memory，提供更高的性能，水平扩展也更快更方便
 - 更安全，因为 fault 是分离的
 - AWS 一开始的出现，就是因为社内的服务 API 的启发
-- 服务之间依赖于通信，因为是松耦合，分布式的
-- con：更多的 *overhead 和 challenges*，test 和 debug 比较难
-- 需要服务之间的完全逻辑分离，不需要和其他 team 开会
-- *单一责任原则 single responsibility principle*，一个服务负责一个领域，行为，资源
-- 为每个服务*分离 database*，产生的数据重复应当在一个可以接受的 overhead 的限度内
-- 当然该模式的好处也是有上限的，如果组织过于复杂和庞大，好处就会逐渐降低
-- 从单体构架，过渡到微服务构架，是一个不错的实践方式
 
+**DRY**
+- 该原则很重要但是在微服务构架中却不切实际，它将导致紧结合
+- 公用的lib可以作为另一个service分离出来
+- 也可使用code generation创建gRPC等API来进行公共使用
+- 也可用sidecar模式在每个service中host功能
 
 **构架原则：**
-
-1. Cohesion（功能聚合，定义边界）：将相同功能的 function 放在一起，定义微服务的边界
-2. Single Responsibility Principal（单一职责原则）：每个服务明确管理一个功能，和一个好用的API接口，size 并不重要
+1. Cohesion（功能聚合，定义边界）：将相同功能的 function（actions，entities）放在一起，定义微服务的边界
+2. *Single Responsibility Principal（单一职责原则）*：每个服务明确管理一个功能，和一个好用的API接口，size 并不重要
 3. Loose Coupling（疏结合）：防止服务之间的过渡依赖
 
+**subdomain分离**
+1. core：核心领域功能
+2. supporting：支持性领域
+3. generic：比如支付功能等泛用功能
 
+**migration重点**
+- 确认迁移组件和功能：频繁变更的组件/需要高扩展性的组件/最少技术债的组件
+- 确保测试用例的详尽
+- 设计好用的组件API
+- 为了降低风险，最好确保code和技术栈不做太大变化
 
+**database分离**
+- 每个service都有自己的database，指责清晰，当需要和其他服务的db互动的时候都要通过API，表变更也要通过API版本变更来逐步过渡
+- con：就是latency增加，通过cache存储，会提速，但是会失去强一致性，只能遵循最终一致性了
+- con：不能直接join数据，只能通过编程的方式，取得数据后再join
+- con：难以进行事务处理
 
+**前端微服务（单页应用）构架**
+- 前端的各个组件，以SPA（单页应用）的形式存在，由不同的team进行管理
+- 单页应用的 framework 有很多，但是这里说的只是一种构架模式，没有指定要用哪个
+
+**API 管理方式**
+- API 分类可以根据很多标准，比如public/private/partner，或者根据用户的订阅等级的不同
+- Load Balancer/API Gateway
 
 ### Event Driven Architecture
 
