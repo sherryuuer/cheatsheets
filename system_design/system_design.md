@@ -364,14 +364,15 @@ real-time protocol
 ### Microservices Architecture
 
 - small code base，易于管理，部署更快，服务分离
+- 需要更少的cpu 和 memory，提供更高的性能，水平扩展也更快更方便
+- 更安全，因为 fault 是分离的
+- AWS 一开始的出现，就是因为社内的服务 API 的启发
+
 - **组织**，每个团队可以用不同的框架，语言，数据库，计划，进行开发部署
   - 每个团队都有独立的CI/CD管道和监控系统，这是复杂的工程
   - 每个团队都需要时间适应和学习新的系统
   - 需要统一API设计规则，方便合作
   - 需要有统一的安全和数据合规
-- 需要更少的cpu 和 memory，提供更高的性能，水平扩展也更快更方便
-- 更安全，因为 fault 是分离的
-- AWS 一开始的出现，就是因为社内的服务 API 的启发
 
 **DRY**
 - 该原则很重要但是在微服务构架中却不切实际，它将导致紧结合
@@ -416,10 +417,33 @@ real-time protocol
 - Events producer -> message broker -> consumers
 - 好处在于，*消除了服务之间的依存关系*，异步，解耦
 - consumers 的添加不需要 producer 知道
-- 适合 real-time 分析
 - *Event source pattern* 事件源模式，告诉我们交易发生的历史过程，log分析，事件是不可变的单元，只能被添加，重放
 - *CQRS（Command Query Responsibility Segregation，命令查询职责分离）*读写分离模式，事件源的数据只用于操作，事件处理服务的数据只用于读，所有变化都以事件的形式存在，比如join事件，在一个数据库发生了更改的时候，触发更新read-only数据库的*物化视图*，这个模式*好天才*！
-- *物化视图 Materialized view*是事件驱动型
+  - *物化视图 Materialized view*是事件驱动型
+- *SAGA模式*是一种用于处理分布式事务的设计模式，它通过将一个大事务拆分为一系列的小事务（用户可以通过app界面选择小事务区分），并使用事件协调这些事务，以确保数据一致性，尤其在微服务架构中十分常用
+  - 编排模式（orchestration）
+  - 事件模式（message queue）
+- *Event Sourcing构架*，关注的是每次事件的变更点，很像版本管理
+
+- use case:
+  - fire and forget：只请求不等回复
+  - reliable delivery：比如金融领域的交易处理
+  - infinite stream of events：比如IoT数据，实时处理
+  - anomaly detection/pattern recognition
+  - broadcasting：广播类型
+  - buffering：数据buffer
+  - pubsub：和 event streaming（会关注old data）不同，pubsub 的消费者只关注最新的 event
+
+- delivery semantic
+  - at most once：要在所有的处理都结束后ack，允许 data lose
+  - at least once：为了确保数据不丢失，数据可能重复
+  - exactly once：较难，不是所有的tool都提供，使用幂等性ID确保事件的同一性
+
+- 相关tool：Kafka，SQS，PubSub
+
+
+
+
 
 ## Big Data Architecture
 
